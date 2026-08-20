@@ -273,7 +273,7 @@ export default function Home() {
         modelName={modelName}
       />
 
-      <main className="flex-1 flex flex-col min-w-0 h-full">
+      <main className="flex-1 flex flex-col min-w-0 h-full relative">
         {/* Minimal top bar */}
         <header className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border)] bg-white shrink-0">
           <button
@@ -305,8 +305,8 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Messages - more compact */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 bg-[var(--chat-bg)]">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 pb-28 space-y-4 bg-[var(--chat-bg)]">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <div className="w-14 h-14 rounded-full bg-[var(--duo-green)] flex items-center justify-center text-white text-2xl font-extrabold shadow-md mb-4">
@@ -390,87 +390,89 @@ export default function Home() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Minimal input area */}
-        <div className="border-t border-[var(--border)] bg-white p-3 shrink-0 safe-area-pb">
-          {attachments.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-2 max-w-2xl mx-auto">
-              {attachments.map((a) => (
-                <div
-                  key={a.id}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--bg-secondary)] text-xs font-medium"
-                >
-                  {a.type.startsWith("image/") ? (
-                    <ImageIcon size={12} />
-                  ) : (
-                    <FileText size={12} />
-                  )}
-                  <span className="truncate max-w-[100px]">{a.name}</span>
-                  <button
-                    onClick={() =>
-                      setAttachments((prev) => prev.filter((x) => x.id !== a.id))
-                    }
-                    className="text-[var(--text-muted)] hover:text-red-500"
+        {/* Floating input bar */}
+        <div className="absolute bottom-0 left-0 right-0 z-30 px-3 pb-3 pt-2 pointer-events-none safe-area-pb">
+          <div className="max-w-2xl mx-auto pointer-events-auto">
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {attachments.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/95 backdrop-blur border border-[var(--border)] text-xs font-medium shadow-sm"
                   >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                    {a.type.startsWith("image/") ? (
+                      <ImageIcon size={12} />
+                    ) : (
+                      <FileText size={12} />
+                    )}
+                    <span className="truncate max-w-[100px]">{a.name}</span>
+                    <button
+                      onClick={() =>
+                        setAttachments((prev) => prev.filter((x) => x.id !== a.id))
+                      }
+                      className="text-[var(--text-muted)] hover:text-red-500"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
-          <form
-            onSubmit={onSubmit}
-            className="max-w-2xl mx-auto flex items-end gap-2"
-          >
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2.5 rounded-xl border border-[var(--border)] hover:border-[var(--duo-green)] text-[var(--text-muted)] hover:text-[var(--duo-green)] transition-colors shrink-0"
-              title="Upload files"
+            <form
+              onSubmit={onSubmit}
+              className="flex items-end gap-2 bg-white/95 backdrop-blur-md border border-[var(--border)] rounded-2xl shadow-lg p-2"
             >
-              <Paperclip size={18} />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={handleFileSelect}
-            />
-
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  onSubmit(e as any);
-                }
-              }}
-              placeholder="Message..."
-              rows={1}
-              className="flex-1 resize-none px-3.5 py-2.5 rounded-2xl border border-[var(--border)] focus:border-[var(--duo-green)] outline-none font-medium text-[14px] max-h-32 overflow-y-auto"
-              style={{ minHeight: "44px" }}
-            />
-
-            {isLoading ? (
               <button
                 type="button"
-                onClick={stop}
-                className="p-2.5 rounded-xl bg-[var(--duo-red)] text-white shadow-sm shrink-0"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2.5 rounded-xl hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--duo-green)] transition-colors shrink-0"
+                title="Upload files"
               >
-                <StopCircle size={20} />
+                <Paperclip size={18} />
               </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={!input.trim() && attachments.length === 0}
-                className="p-2.5 rounded-xl bg-[var(--duo-green)] text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-105 active:scale-95 transition-all shrink-0"
-              >
-                <Send size={20} />
-              </button>
-            )}
-          </form>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onSubmit(e as any);
+                  }
+                }}
+                placeholder="Message..."
+                rows={1}
+                className="flex-1 resize-none px-2 py-2.5 bg-transparent outline-none font-medium text-[14px] max-h-32 overflow-y-auto"
+                style={{ minHeight: "40px" }}
+              />
+
+              {isLoading ? (
+                <button
+                  type="button"
+                  onClick={stop}
+                  className="p-2.5 rounded-xl bg-[var(--duo-red)] text-white shadow-sm shrink-0"
+                >
+                  <StopCircle size={20} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!input.trim() && attachments.length === 0}
+                  className="p-2.5 rounded-xl bg-[var(--duo-green)] text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-105 active:scale-95 transition-all shrink-0"
+                >
+                  <Send size={20} />
+                </button>
+              )}
+            </form>
+          </div>
         </div>
       </main>
 
