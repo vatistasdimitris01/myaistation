@@ -1,18 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #000000;
-  --bg-elevated: #111111;
-  --bg-input: #1c1c1e;
-  --bg-chip: #2c2c2e;
-  --text: #ffffff;
-  --text-muted: #8e8e93;
-  --text-secondary: #aeaeb2;
-  --border: #2c2c2e;
-  --accent: #ffffff;
-  --green: #30d158;
-  --blue: #0a84ff;
-  --red: #ff453a;
+  --bg: #ffffff;
+  --bg-secondary: #f5f5f7;
+  --bg-input: #f5f5f7;
+  --bg-chip: #e8e8ed;
+  --text: #1d1d1f;
+  --text-muted: #86868b;
+  --border: #e5e5ea;
+  --accent: #0071e3;
 }
 
 * {
@@ -34,7 +30,8 @@ html, body {
 .input-pill {
   background: var(--bg-input);
   border-radius: 28px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
 .chip {
@@ -45,36 +42,27 @@ html, body {
   color: var(--text);
 }
 
-::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
+::-webkit-scrollbar { width: 0; height: 0; }
 
 .msg-user {
-  background: #1c1c1e;
+  background: #0071e3;
+  color: white;
   border-radius: 20px 20px 6px 20px;
 }
 .msg-ai {
   background: transparent;
+  color: var(--text);
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.message-enter {
-  animation: fadeIn 0.2s ease-out;
-}
+.message-enter { animation: fadeIn 0.2s ease-out; }
 
-.safe-area-pb {
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-}
-.safe-area-pt {
-  padding-top: max(8px, env(safe-area-inset-top));
-}
+.safe-area-pb { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.safe-area-pt { padding-top: max(8px, env(safe-area-inset-top)); }
 
 @media (display-mode: standalone) {
-  body {
-    user-select: none;
-  }
+  body { user-select: none; }
 }
