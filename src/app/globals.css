@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+:root {
+  --duo-green: #58CC02;
+  --duo-green-dark: #58A700;
+  --duo-blue: #1CB0F6;
+  --duo-red: #FF4B4B;
+  --duo-yellow: #FFC800;
+  --duo-purple: #CE82FF;
+  --bg: #FFFFFF;
+  --bg-secondary: #F7F7F7;
+  --text: #3C3C3C;
+  --text-muted: #777777;
+  --border: #E5E5E5;
+  --sidebar-bg: #FFFFFF;
+  --chat-bg: #F7F7F7;
+}
+
+.dark {
+  --bg: #131F24;
+  --bg-secondary: #1A2A32;
+  --text: #FFFFFF;
+  --text-muted: #AFAFAF;
+  --border: #2A3A42;
+  --sidebar-bg: #1A2A32;
+  --chat-bg: #131F24;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Duolingo-style buttons */
+.btn-duo {
+  background: var(--duo-green);
+  color: white;
+  font-weight: 700;
+  border-radius: 16px;
+  border: none;
+  border-bottom: 4px solid var(--duo-green-dark);
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 15px;
+}
+
+.btn-duo:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.btn-duo:active {
+  border-bottom-width: 0;
+  transform: translateY(2px);
+}
+
+.btn-duo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--duo-blue);
+  border: 2px solid var(--border);
+  border-bottom: 4px solid var(--border);
+  border-radius: 16px;
+  font-weight: 700;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.btn-secondary:hover {
+  background: #F0F0F0;
+}
+
+.btn-secondary:active {
+  border-bottom-width: 2px;
+  transform: translateY(2px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C4C4C4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A0A0A0;
+}
+
+/* Message animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-enter {
+  animation: fadeInUp 0.25s ease-out;
+}
+
+/* Typing indicator */
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+.typing-dot {
+  animation: bounce 1.2s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
