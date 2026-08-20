@@ -1,67 +1,87 @@
-# MyAIStation 🎯
+# MyAIStation API
 
-**Duolingo-style AI chat station** powered by [OpenCode Zen](https://opencode.ai/zen) + full GitHub tool use.
+OpenAI-compatible gateway to **OpenCode Zen** with full **GitHub tools**.
 
-Chat like ChatGPT / Grok, but with a playful green Duolingo vibe, sidebars, model selection, file & folder uploads, and direct access to **your GitHub account** (list repos, read/write files, create repos, search code).
+## Quick start
 
-## Features
+1. Deploy to Vercel
+2. Set env vars:
+   - `OPENCODE_API_KEY` — from [opencode.ai/auth](https://opencode.ai/auth)
+   - `GITHUB_TOKEN` — GitHub PAT with `repo` scope
+3. Call the endpoint from any app
 
-- 🎨 **Duolingo-inspired UI** — bright green, rounded buttons, fun animations, Nunito font
-- 💬 **Streaming chat** like ChatGPT / Grok
-- 🤖 **Model selector** — GPT-5.x, Claude 4.x, Big Pickle (free), GLM, Kimi, Qwen3 Coder, Grok Code, etc. via OpenCode Zen
-- 📂 **File & folder upload** — attach code, text, images to the conversation
-- 🛠️ **Full AI tool use** with GitHub:
-  - List your repositories
-  - Read / list files & folders
-  - Create or update files (with commit)
-  - Create new repositories
-  - Search code across your repos
-- ⚙️ Settings for OpenCode Zen API key + GitHub PAT (stored locally in browser)
-- 📱 Responsive sidebar (collapsible)
-- 🚀 **Vercel-ready** Next.js 15 App Router
+## Endpoint
 
-## Quick Start
-
-```bash
-git clone https://github.com/vatistasdimitris01/myaistation.git
-cd myaistation
-npm install
-npm run dev
+```
+POST https://YOUR-APP.vercel.app/api/v1/chat/completions
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
-
-1. Click **Settings** → paste your **OpenCode Zen API key** (get one at [opencode.ai/auth](https://opencode.ai/auth))
-2. (Optional) Paste a **GitHub Personal Access Token** with `repo` scope
-3. Start chatting!
-
-## Deploy to Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vatistasdimitris01/myaistation)
-
-Or:
-
-```bash
-npx vercel
+### Headers
+```
+Authorization: Bearer <OPENCODE_API_KEY>
+Content-Type: application/json
 ```
 
-No server-side secrets required — API keys stay in the browser / are sent only to your own API routes.
+### Body
+```json
+{
+  "model": "big-pickle",
+  "messages": [
+    { "role": "user", "content": "List my GitHub repos" }
+  ],
+  "stream": false
+}
+```
 
-## Tech Stack
+## Use with OpenAI SDK
 
-- Next.js 15 + React 19 + TypeScript
-- Tailwind CSS v4
-- Vercel AI SDK (`ai` + `@ai-sdk/openai` / `@ai-sdk/anthropic`)
-- Octokit for GitHub tools
-- Lucide icons
+```ts
+import OpenAI from "openai";
 
-## OpenCode Zen Endpoints used
+const client = new OpenAI({
+  apiKey: process.env.OPENCODE_API_KEY,
+  baseURL: "https://YOUR-APP.vercel.app/api/v1",
+});
 
-- `https://opencode.ai/zen/v1/responses` (GPT models)
-- `https://opencode.ai/zen/v1/messages` (Claude)
-- `https://opencode.ai/zen/v1/chat/completions` (OpenAI-compatible models)
-- Models list: `https://opencode.ai/zen/v1/models`
+const res = await client.chat.completions.create({
+  model: "big-pickle",
+  messages: [{ role: "user", content: "Create README.md in myaistation" }],
+});
+```
 
-## License
+## JavaScript fetch
 
-MIT
+```js
+const res = await fetch("https://YOUR-APP.vercel.app/api/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer " + process.env.OPENCODE_API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "big-pickle",
+    messages: [{ role: "user", content: "List my repos" }],
+    stream: false,
+  }),
+});
+const data = await res.json();
+console.log(data.choices[0].message.content);
+```
+
+## GitHub tools (auto when GITHUB_TOKEN is set)
+
+| Tool | Description |
+|------|-------------|
+| `list_repos` | List your repositories |
+| `get_file` | Read a file |
+| `list_dir` | List directory contents |
+| `create_or_update_file` | Create or edit a file |
+| `delete_file` | Delete a file |
+| `create_repo` | Create a new repository |
+| `search_code` | Search code across your repos |
+
+## Models
+
+`big-pickle` · `claude-sonnet-4-20250514` · `gpt-4.1` · `gpt-4o` · `glm-4.5` · `kimi-k2` · `qwen3-coder` · `grok-code`
+
+List: `GET /api/v1/models`
