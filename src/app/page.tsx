@@ -17,7 +17,7 @@ import {
   FileText,
   Image as ImageIcon,
   X,
-  Loader2,
+  Menu,
 } from "lucide-react";
 
 const STORAGE_KEY = "myaistation_sessions";
@@ -35,13 +35,12 @@ export default function Home() {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [showSettings, setShowSettings] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [model, setModel] = useState(defaultSettings.defaultModel);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load from localStorage
   useEffect(() => {
     try {
       const s = localStorage.getItem(STORAGE_KEY);
@@ -59,7 +58,6 @@ export default function Home() {
     } catch {}
   }, []);
 
-  // Persist sessions
   useEffect(() => {
     if (sessions.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
@@ -84,13 +82,13 @@ export default function Home() {
       apiKey: settings.openCodeApiKey,
       githubToken: settings.githubToken,
     },
-    initialMessages: currentSession?.messages.map((m) => ({
-      id: m.id,
-      role: m.role as "user" | "assistant" | "system",
-      content: m.content,
-    })) || [],
+    initialMessages:
+      currentSession?.messages.map((m) => ({
+        id: m.id,
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content,
+      })) || [],
     onFinish: (message) => {
-      // Update session after response
       if (!currentId) return;
       setSessions((prev) =>
         prev.map((s) => {
@@ -118,7 +116,6 @@ export default function Home() {
     },
   });
 
-  // Sync messages when switching sessions
   useEffect(() => {
     if (currentSession) {
       setMessages(
@@ -179,7 +176,10 @@ export default function Home() {
         type: file.type,
         size: file.size,
       };
-      if (file.type.startsWith("text/") || file.name.match(/\.(ts|tsx|js|jsx|json|md|py|css|html|txt)$/i)) {
+      if (
+        file.type.startsWith("text/") ||
+        file.name.match(/\.(ts|tsx|js|jsx|json|md|py|css|html|txt)$/i)
+      ) {
         att.content = await file.text();
       } else if (file.type.startsWith("image/")) {
         const reader = new FileReader();
@@ -202,7 +202,6 @@ export default function Home() {
       return;
     }
 
-    // Ensure we have a session
     let sid = currentId;
     if (!sid) {
       const id = uuidv4();
@@ -219,7 +218,6 @@ export default function Home() {
       sid = id;
     }
 
-    // Build content with attachments
     let content = input;
     if (attachments.length > 0) {
       const attText = attachments
@@ -233,7 +231,6 @@ export default function Home() {
       content += attText;
     }
 
-    // Add user message to session
     const userMsg: Message = {
       id: uuidv4(),
       role: "user",
@@ -260,11 +257,10 @@ export default function Home() {
     handleSubmit(e, { data: { content } });
   };
 
-  const modelName =
-    DEFAULT_MODELS.find((m) => m.id === model)?.name || model;
+  const modelName = DEFAULT_MODELS.find((m) => m.id === model)?.name || model;
 
   return (
-    <div className="flex h-screen bg-[var(--bg)]">
+    <div className="flex h-[100dvh] bg-[var(--bg)] overflow-hidden">
       <Sidebar
         sessions={sessions}
         currentId={currentId}
@@ -272,20 +268,31 @@ export default function Home() {
         onNew={createNewChat}
         onDelete={deleteSession}
         onOpenSettings={() => setShowSettings(true)}
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
         modelName={modelName}
       />
 
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-white">
-          <ModelSelector value={model} onChange={setModel} />
-          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+      <main className="flex-1 flex flex-col min-w-0 h-full">
+        {/* Minimal top bar */}
+        <header className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border)] bg-white shrink-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-2 -ml-1 rounded-xl hover:bg-[var(--bg-secondary)] text-[var(--text)] md:hidden"
+            aria-label="Open menu"
+          >
+            <Menu size={22} />
+          </button>
+
+          <div className="flex-1 min-w-0">
+            <ModelSelector value={model} onChange={setModel} />
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-[var(--text-muted)] shrink-0">
             {settings.githubToken ? (
               <span className="flex items-center gap-1 text-[var(--duo-green)] font-semibold">
-                <span className="w-2 h-2 rounded-full bg-[var(--duo-green)]" />
-                GitHub connected
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--duo-green)]" />
+                GitHub
               </span>
             ) : (
               <button
@@ -298,31 +305,30 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 bg-[var(--chat-bg)]">
+        {/* Messages - more compact */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 bg-[var(--chat-bg)]">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <div className="w-20 h-20 rounded-full bg-[var(--duo-green)] flex items-center justify-center text-white text-4xl font-extrabold shadow-lg mb-6">
+              <div className="w-14 h-14 rounded-full bg-[var(--duo-green)] flex items-center justify-center text-white text-2xl font-extrabold shadow-md mb-4">
                 M
               </div>
-              <h2 className="text-2xl font-extrabold text-[var(--text)] mb-2">
-                Welcome to MyAIStation!
+              <h2 className="text-xl font-extrabold text-[var(--text)] mb-1.5">
+                MyAIStation
               </h2>
-              <p className="text-[var(--text-muted)] max-w-md mb-6">
-                Chat with powerful OpenCode Zen models. Upload files, edit code, and work
-                directly inside your GitHub repositories — all with a fun Duolingo vibe.
+              <p className="text-sm text-[var(--text-muted)] max-w-xs mb-5">
+                Chat with OpenCode Zen • Upload files • Work in your GitHub
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {[
-                  "List my GitHub repos",
+                  "List my repos",
                   "Explain this code",
-                  "Create a new React component",
+                  "Create a component",
                   "Help me debug",
                 ].map((q) => (
                   <button
                     key={q}
                     onClick={() => setInput(q)}
-                    className="px-4 py-2 rounded-2xl border-2 border-[var(--border)] bg-white font-semibold text-sm hover:border-[var(--duo-green)] hover:text-[var(--duo-green-dark)] transition-colors"
+                    className="px-3 py-1.5 rounded-2xl border border-[var(--border)] bg-white font-semibold text-xs hover:border-[var(--duo-green)] hover:text-[var(--duo-green-dark)] transition-colors"
                   >
                     {q}
                   </button>
@@ -335,50 +341,48 @@ export default function Home() {
             <div
               key={m.id}
               className={cn(
-                "flex gap-3 message-enter max-w-3xl mx-auto",
+                "flex gap-2 message-enter max-w-2xl mx-auto",
                 m.role === "user" ? "justify-end" : "justify-start"
               )}
             >
               {m.role === "assistant" && (
-                <div className="w-9 h-9 rounded-full bg-[var(--duo-green)] flex items-center justify-center text-white shrink-0 shadow">
-                  <Bot size={18} />
+                <div className="w-7 h-7 rounded-full bg-[var(--duo-green)] flex items-center justify-center text-white shrink-0 shadow-sm mt-0.5">
+                  <Bot size={14} />
                 </div>
               )}
               <div
                 className={cn(
-                  "rounded-2xl px-4 py-3 max-w-[80%] shadow-sm",
+                  "rounded-2xl px-3.5 py-2.5 max-w-[85%] shadow-sm text-[14px] leading-relaxed",
                   m.role === "user"
                     ? "bg-[var(--duo-blue)] text-white rounded-br-md"
                     : "bg-white border border-[var(--border)] text-[var(--text)] rounded-bl-md"
                 )}
               >
-                <div className="whitespace-pre-wrap text-[15px] leading-relaxed font-medium">
-                  {m.content}
-                </div>
+                <div className="whitespace-pre-wrap font-medium">{m.content}</div>
               </div>
               {m.role === "user" && (
-                <div className="w-9 h-9 rounded-full bg-[var(--duo-blue)] flex items-center justify-center text-white shrink-0 shadow">
-                  <User size={18} />
+                <div className="w-7 h-7 rounded-full bg-[var(--duo-blue)] flex items-center justify-center text-white shrink-0 shadow-sm mt-0.5">
+                  <User size={14} />
                 </div>
               )}
             </div>
           ))}
 
           {isLoading && (
-            <div className="flex gap-3 max-w-3xl mx-auto">
-              <div className="w-9 h-9 rounded-full bg-[var(--duo-green)] flex items-center justify-center text-white shrink-0">
-                <Bot size={18} />
+            <div className="flex gap-2 max-w-2xl mx-auto">
+              <div className="w-7 h-7 rounded-full bg-[var(--duo-green)] flex items-center justify-center text-white shrink-0">
+                <Bot size={14} />
               </div>
-              <div className="bg-white border border-[var(--border)] rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[var(--duo-green)] typing-dot" />
-                <span className="w-2 h-2 rounded-full bg-[var(--duo-green)] typing-dot" />
-                <span className="w-2 h-2 rounded-full bg-[var(--duo-green)] typing-dot" />
+              <div className="bg-white border border-[var(--border)] rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--duo-green)] typing-dot" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--duo-green)] typing-dot" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--duo-green)] typing-dot" />
               </div>
             </div>
           )}
 
           {error && (
-            <div className="max-w-3xl mx-auto text-center text-red-500 text-sm font-semibold">
+            <div className="max-w-2xl mx-auto text-center text-red-500 text-xs font-semibold">
               {error.message}
             </div>
           )}
@@ -386,26 +390,28 @@ export default function Home() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area */}
-        <div className="border-t border-[var(--border)] bg-white p-4">
+        {/* Minimal input area */}
+        <div className="border-t border-[var(--border)] bg-white p-3 shrink-0 safe-area-pb">
           {attachments.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3 max-w-3xl mx-auto">
+            <div className="flex flex-wrap gap-1.5 mb-2 max-w-2xl mx-auto">
               {attachments.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-secondary)] text-sm font-medium"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--bg-secondary)] text-xs font-medium"
                 >
                   {a.type.startsWith("image/") ? (
-                    <ImageIcon size={14} />
+                    <ImageIcon size={12} />
                   ) : (
-                    <FileText size={14} />
+                    <FileText size={12} />
                   )}
-                  <span className="truncate max-w-[120px]">{a.name}</span>
+                  <span className="truncate max-w-[100px]">{a.name}</span>
                   <button
-                    onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}
+                    onClick={() =>
+                      setAttachments((prev) => prev.filter((x) => x.id !== a.id))
+                    }
                     className="text-[var(--text-muted)] hover:text-red-500"
                   >
-                    <X size={14} />
+                    <X size={12} />
                   </button>
                 </div>
               ))}
@@ -414,15 +420,15 @@ export default function Home() {
 
           <form
             onSubmit={onSubmit}
-            className="max-w-3xl mx-auto flex items-end gap-2"
+            className="max-w-2xl mx-auto flex items-end gap-2"
           >
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 rounded-2xl border-2 border-[var(--border)] hover:border-[var(--duo-green)] text-[var(--text-muted)] hover:text-[var(--duo-green)] transition-colors"
-              title="Upload files or folders"
+              className="p-2.5 rounded-xl border border-[var(--border)] hover:border-[var(--duo-green)] text-[var(--text-muted)] hover:text-[var(--duo-green)] transition-colors shrink-0"
+              title="Upload files"
             >
-              <Paperclip size={20} />
+              <Paperclip size={18} />
             </button>
             <input
               ref={fileInputRef}
@@ -432,44 +438,39 @@ export default function Home() {
               onChange={handleFileSelect}
             />
 
-            <div className="flex-1 relative">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    onSubmit(e as any);
-                  }
-                }}
-                placeholder="Ask anything, or upload files & work with GitHub..."
-                rows={1}
-                className="w-full resize-none px-4 py-3 pr-12 rounded-2xl border-2 border-[var(--border)] focus:border-[var(--duo-green)] outline-none font-medium text-[15px] max-h-40 overflow-y-auto"
-                style={{ minHeight: "52px" }}
-              />
-            </div>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  onSubmit(e as any);
+                }
+              }}
+              placeholder="Message..."
+              rows={1}
+              className="flex-1 resize-none px-3.5 py-2.5 rounded-2xl border border-[var(--border)] focus:border-[var(--duo-green)] outline-none font-medium text-[14px] max-h-32 overflow-y-auto"
+              style={{ minHeight: "44px" }}
+            />
 
             {isLoading ? (
               <button
                 type="button"
                 onClick={stop}
-                className="p-3 rounded-2xl bg-[var(--duo-red)] text-white shadow-md"
+                className="p-2.5 rounded-xl bg-[var(--duo-red)] text-white shadow-sm shrink-0"
               >
-                <StopCircle size={22} />
+                <StopCircle size={20} />
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={!input.trim() && attachments.length === 0}
-                className="p-3 rounded-2xl bg-[var(--duo-green)] text-white shadow-md disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-105 active:scale-95 transition-all"
+                className="p-2.5 rounded-xl bg-[var(--duo-green)] text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-105 active:scale-95 transition-all shrink-0"
               >
-                <Send size={22} />
+                <Send size={20} />
               </button>
             )}
           </form>
-          <p className="text-center text-xs text-[var(--text-muted)] mt-2">
-            Powered by OpenCode Zen · GitHub tools enabled with your token
-          </p>
         </div>
       </main>
 
