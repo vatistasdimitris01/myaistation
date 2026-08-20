@@ -28,15 +28,18 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2 rounded-2xl border-2 border-[var(--border)] bg-white hover:bg-[var(--bg-secondary)] font-bold text-sm text-[var(--text)] transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-[var(--border)] bg-white hover:bg-[var(--bg-secondary)] font-bold text-xs sm:text-sm text-[var(--text)] transition-colors max-w-full"
       >
-        <span className="w-2 h-2 rounded-full bg-[var(--duo-green)]" />
-        {current.name}
-        <ChevronDown size={16} className={cn("transition-transform", open && "rotate-180")} />
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--duo-green)] shrink-0" />
+        <span className="truncate">{current.name}</span>
+        <ChevronDown
+          size={14}
+          className={cn("shrink-0 transition-transform", open && "rotate-180")}
+        />
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 w-64 max-h-80 overflow-y-auto bg-white border-2 border-[var(--border)] rounded-2xl shadow-xl z-50 py-2">
+        <div className="absolute top-full left-0 mt-1.5 w-56 max-h-72 overflow-y-auto bg-white border border-[var(--border)] rounded-2xl shadow-xl z-50 py-1.5">
           {DEFAULT_MODELS.map((m) => (
             <button
               key={m.id}
@@ -45,12 +48,14 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
                 setOpen(false);
               }}
               className={cn(
-                "w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-[var(--duo-green)]/10 transition-colors",
+                "w-full text-left px-3 py-2 text-xs sm:text-sm font-semibold hover:bg-[var(--duo-green)]/10 transition-colors",
                 m.id === value && "bg-[var(--duo-green)]/15 text-[var(--duo-green-dark)]"
               )}
             >
-              <div>{m.name}</div>
-              <div className="text-xs font-normal text-[var(--text-muted)]">{m.provider}</div>
+              <div className="truncate">{m.name}</div>
+              <div className="text-[10px] font-normal text-[var(--text-muted)]">
+                {m.provider}
+              </div>
             </button>
           ))}
         </div>
